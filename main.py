@@ -17,6 +17,7 @@ from utils.embeds import error_embed, create_embed
 from utils.logger import send_log, logger
 from database.db_manager import db
 from utils.ui_components import GiveawayView
+from keep_alive import keep_alive
 
 
 class ShopBot(commands.Bot):
@@ -152,6 +153,8 @@ def main():
         logger.critical("Bot token is not configured in config.py! Please provide a valid Discord bot token.")
         sys.exit(1)
 
+   keep_alive()
+    
     bot = ShopBot()
     try:
         bot.run(config.TOKEN)
