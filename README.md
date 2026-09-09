@@ -42,9 +42,8 @@ All moderation commands feature permission checks, dark blurple embeds, and audi
 ---
 
 ### 🎉 Advanced Giveaway System (Components V2)
-* **Creation Command:** `+gwy <time> <winner_count> <prize> [forced_user_id]`
-  * Example: `+gwy 2h 1 Discord_Nitro`
-  * Example with Forced Winner: `+gwy 5m 1 Nitro 123456789012345678`
+* **Creation Command:** `+gwy <time> <winner_count> <prize> `
+  * Example: `+gwy 2h 1 Discord_Nitro` 
 * Automatically pings `@everyone` and `@here`.
 * Interactive **Components V2 Buttons**:
   * `🎉 Join Giveaway` (Toggles entry & updates count live)
