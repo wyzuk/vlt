@@ -23,7 +23,6 @@ class Utility(commands.Cog):
         self.bot = bot
         self.start_time = time.time()
 
-    # --- ANNOUNCE COMMAND ---
     @commands.command(name="announce")
     @commands.has_permissions(manage_messages=True)
     async def announce(self, ctx: commands.Context, channel: discord.TextChannel, *, message: str):
@@ -41,7 +40,6 @@ class Utility(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to send announcement: {e}"))
 
-    # --- SAY COMMAND ---
     @commands.command(name="say")
     @commands.has_permissions(manage_messages=True)
     async def say(self, ctx: commands.Context, *, message: str):
@@ -52,7 +50,6 @@ class Utility(commands.Cog):
             pass
         await ctx.send(content=message)
 
-    # --- EMBED COMMAND ---
     @commands.command(name="embed")
     @commands.has_permissions(manage_messages=True)
     async def embed_cmd(self, ctx: commands.Context, *, args: str):
@@ -91,7 +88,6 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # --- USERINFO COMMAND ---
     @commands.command(name="userinfo")
     async def userinfo(self, ctx: commands.Context, member: Optional[discord.Member] = None):
         """Display information about a user."""
@@ -118,7 +114,6 @@ class Utility(commands.Cog):
         embed.add_field(name=f"Roles [{len(roles)}]", value=", ".join(roles[:10]) if roles else "None", inline=False)
         await ctx.send(embed=embed)
 
-    # --- SERVERINFO COMMAND ---
     @commands.command(name="serverinfo")
     async def serverinfo(self, ctx: commands.Context):
         """Display information about the current server."""
@@ -144,7 +139,6 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # --- AVATAR COMMAND ---
     @commands.command(name="avatar")
     async def avatar(self, ctx: commands.Context, member: Optional[discord.Member | discord.User] = None):
         """Display a member's avatar."""
@@ -156,7 +150,6 @@ class Utility(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    # --- CHANNELINFO COMMAND ---
     @commands.command(name="channelinfo")
     async def channelinfo(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None):
         """Display information about a channel."""
@@ -173,7 +166,6 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # --- ROLEINFO COMMAND ---
     @commands.command(name="roleinfo")
     async def roleinfo(self, ctx: commands.Context, role: discord.Role):
         """Display information about a role."""
@@ -190,7 +182,6 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # --- BOTINFO COMMAND ---
     @commands.command(name="botinfo")
     async def botinfo(self, ctx: commands.Context):
         """Display information and system specifications about the bot."""
@@ -217,7 +208,6 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # --- PING COMMAND ---
     @commands.command(name="ping")
     async def ping(self, ctx: commands.Context):
         """Check bot latency."""
@@ -225,7 +215,6 @@ class Utility(commands.Cog):
         embed = info_embed("Pong! 🏓", f"Bot WebSocket Latency: **{latency}ms**")
         await ctx.send(embed=embed)
 
-    # --- UPTIME COMMAND ---
     @commands.command(name="uptime")
     async def uptime(self, ctx: commands.Context):
         """Check how long the bot has been online."""
@@ -238,7 +227,6 @@ class Utility(commands.Cog):
         embed = info_embed("Bot Uptime ⏳", f"Online for: {uptime_str}")
         await ctx.send(embed=embed)
 
-    # --- INVITE COMMAND ---
     @commands.command(name="invite")
     async def invite(self, ctx: commands.Context):
         """Get the bot invite link."""

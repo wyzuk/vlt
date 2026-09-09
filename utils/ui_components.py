@@ -12,9 +12,7 @@ from utils.embeds import create_embed, info_embed
 from database.db_manager import db
 
 
-# ==========================================
 # Giveaway Interaction Buttons (Components V2)
-# ==========================================
 
 class GiveawayView(discord.ui.View):
     """
@@ -111,9 +109,7 @@ class GiveawayView(discord.ui.View):
             )
 
 
-# ==========================================
 # Help Command Category Navigation (Components V2)
-# ==========================================
 
 class HelpCategorySelect(discord.ui.Select):
     """Dropdown Select Menu for choosing Public Help Categories."""
@@ -216,9 +212,7 @@ class HelpNavView(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=self)
 
 
-# ==========================================
 # Generic List Paginator (Components V2)
-# ==========================================
 
 class PaginatorView(discord.ui.View):
     """Components V2 Pagination for lists."""

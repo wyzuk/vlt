@@ -132,7 +132,6 @@ class Help(commands.Cog):
         view = HelpNavView(PUBLIC_HELP_DATA, ctx.author.id)
         await ctx.send(embed=embed, view=view)
 
-    # --- PRIVATE GIVEAWAY HELP COMMAND ---
     @commands.command(name="ghlp")
     @commands.has_permissions(manage_guild=True)
     async def ghlp(self, ctx: commands.Context):

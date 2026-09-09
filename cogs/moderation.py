@@ -30,7 +30,6 @@ class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # --- BAN COMMAND ---
     @commands.command(name="ban")
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx: commands.Context, member: discord.Member | discord.User, *, reason: Optional[str] = None):
@@ -65,7 +64,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not ban member: {e}"))
 
-    # --- KICK COMMAND ---
     @commands.command(name="kick")
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None):
@@ -98,7 +96,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not kick member: {e}"))
 
-    # --- TIMEOUT COMMAND ---
     @commands.command(name="timeout")
     @commands.has_permissions(moderate_members=True)
     async def timeout(self, ctx: commands.Context, member: discord.Member, duration_str: str, *, reason: Optional[str] = None):
@@ -133,7 +130,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not timeout member: {e}"))
 
-    # --- UNTIMEOUT COMMAND ---
     @commands.command(name="untimeout")
     @commands.has_permissions(moderate_members=True)
     async def untimeout(self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None):
@@ -152,7 +148,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not remove timeout: {e}"))
 
-    # --- MUTE COMMAND ---
     @commands.command(name="mute")
     @commands.has_permissions(moderate_members=True)
     async def mute(self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None):
@@ -181,7 +176,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not mute member: {e}"))
 
-    # --- UNMUTE COMMAND ---
     @commands.command(name="unmute")
     @commands.has_permissions(moderate_members=True)
     async def unmute(self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None):
@@ -207,7 +201,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not unmute member: {e}"))
 
-    # --- WARN COMMAND ---
     @commands.command(name="warn")
     @commands.has_permissions(moderate_members=True)
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -233,7 +226,6 @@ class Moderation(commands.Cog):
             color=config.COLOR_WARNING, author=ctx.author
         )
 
-    # --- WARNINGS COMMAND ---
     @commands.command(name="warnings")
     @commands.has_permissions(moderate_members=True)
     async def warnings(self, ctx: commands.Context, member: discord.Member):
@@ -262,7 +254,6 @@ class Moderation(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # --- CLEAR / PURGE COMMAND ---
     @commands.command(name="clear", aliases=["purge"])
     @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx: commands.Context, amount: int):
@@ -290,7 +281,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to purge messages: {e}"))
 
-    # --- LOCK COMMAND ---
     @commands.command(name="lock")
     @commands.has_permissions(manage_channels=True)
     async def lock(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None, *, reason: Optional[str] = None):
@@ -313,7 +303,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to lock channel: {e}"))
 
-    # --- UNLOCK COMMAND ---
     @commands.command(name="unlock")
     @commands.has_permissions(manage_channels=True)
     async def unlock(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None, *, reason: Optional[str] = None):
@@ -336,7 +325,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to unlock channel: {e}"))
 
-    # --- SLOWMODE COMMAND ---
     @commands.command(name="slowmode")
     @commands.has_permissions(manage_channels=True)
     async def slowmode(self, ctx: commands.Context, seconds: int):
@@ -354,7 +342,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to set slowmode: {e}"))
 
-    # --- NICK COMMAND ---
     @commands.command(name="nick")
     @commands.has_permissions(manage_nicknames=True)
     async def nick(self, ctx: commands.Context, member: discord.Member, *, new_nickname: Optional[str] = None):
@@ -368,7 +355,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not change nickname: {e}"))
 
-    # --- ROLE COMMAND ---
     @commands.command(name="role")
     @commands.has_permissions(manage_roles=True)
     async def role(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
@@ -383,7 +369,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to add role: {e}"))
 
-    # --- REMOVEROLE COMMAND ---
     @commands.command(name="removerole")
     @commands.has_permissions(manage_roles=True)
     async def removerole(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
@@ -398,7 +383,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to remove role: {e}"))
 
-    # --- HIDE COMMAND ---
     @commands.command(name="hide")
     @commands.has_permissions(manage_channels=True)
     async def hide(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None):
@@ -413,7 +397,6 @@ class Moderation(commands.Cog):
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not hide channel: {e}"))
 
-    # --- UNHIDE COMMAND ---
     @commands.command(name="unhide")
     @commands.has_permissions(manage_channels=True)
     async def unhide(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None):

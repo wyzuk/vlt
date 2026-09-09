@@ -35,7 +35,6 @@ class Giveaway(commands.Cog):
     def cog_unload(self):
         self.check_giveaways.cancel()
 
-    # --- BACKGROUND TIMER TASK ---
     @tasks.loop(seconds=10)
     async def check_giveaways(self):
         """Check database every 10 seconds for expired active giveaways."""
@@ -151,7 +150,6 @@ class Giveaway(commands.Cog):
             )
             await channel.send(embed=cancel_embed)
 
-    # --- +GWY COMMAND ---
     @commands.command(name="gwy")
     @commands.has_permissions(manage_guild=True)
     async def create_giveaway(
@@ -234,7 +232,6 @@ class Giveaway(commands.Cog):
             err_msg = await ctx.send(embed=error_embed("Error", f"Failed to create giveaway: {e}"))
             await err_msg.delete(delay=5)
 
-    # --- REACTION LISTENERS FOR EASY REACTION JOINING ---
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """User joined giveaway via reaction."""
@@ -257,7 +254,6 @@ class Giveaway(commands.Cog):
             if giveaway and giveaway['ended'] == 0:
                 db.remove_giveaway_entry(payload.message_id, payload.user_id)
 
-    # --- GIVEAWAY MANAGER COMMANDS ---
 
     @commands.command(name="reroll")
     @commands.has_permissions(manage_guild=True)

@@ -54,7 +54,6 @@ class ChannelProtection(commands.Cog):
             # Do NOT repost command invocations! Let the command handler handle it normally.
             return
 
-        # Delete original message
         try:
             await message.delete()
         except discord.Forbidden:
@@ -65,10 +64,8 @@ class ChannelProtection(commands.Cog):
         except Exception as e:
             logger.error(f"Error deleting message in protection handler: {e}")
 
-        # Post clear message content without any header
         content = message.content or None
 
-        # Download attachments to re-upload
         files = []
         for attachment in message.attachments:
             try:
@@ -78,13 +75,10 @@ class ChannelProtection(commands.Cog):
             except Exception as e:
                 logger.error(f"Failed to fetch attachment {attachment.filename}: {e}")
 
-        # Extract embeds
         embeds = message.embeds if message.embeds else []
 
-        # Extract stickers
         stickers = message.stickers if message.stickers else []
 
-        # Repost clear message as Bot
         try:
             await message.channel.send(
                 content=content,

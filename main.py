@@ -21,7 +21,6 @@ from keep_alive import keep_alive
 
 class ShopBot(commands.Bot):
     def __init__(self):
-        # Configure Intents
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
@@ -189,7 +188,6 @@ def main():
         )
         sys.exit(1)
 
-    # Start the Render health-check server
     keep_alive()
 
     bot = ShopBot()

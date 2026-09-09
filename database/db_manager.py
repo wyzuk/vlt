@@ -27,7 +27,6 @@ class DatabaseManager:
         with self._get_connection() as conn:
             cursor = conn.cursor()
 
-            # --- Giveaways Table ---
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS giveaways (
                     message_id INTEGER PRIMARY KEY,
@@ -43,7 +42,6 @@ class DatabaseManager:
                 )
             """)
 
-            # --- User Warnings Table ---
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS warnings (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +53,6 @@ class DatabaseManager:
                 )
             """)
 
-            # --- Future Ready Schema Placeholders (Shop, Inventory, Licenses, Economy) ---
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS products (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,7 +75,6 @@ class DatabaseManager:
 
             conn.commit()
 
-    # --- Giveaway Methods ---
     def save_giveaway(self, message_id: int, channel_id: int, guild_id: int, prize: str, host_id: int, winner_count: int, end_time: float, forced_user_id: Optional[int] = None):
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -155,7 +151,6 @@ class DatabaseManager:
             cursor.execute("DELETE FROM giveaways WHERE message_id = ?", (message_id,))
             conn.commit()
 
-    # --- Warning Methods ---
     def add_warning(self, guild_id: int, user_id: int, moderator_id: int, reason: str, timestamp: float):
         with self._get_connection() as conn:
             cursor = conn.cursor()

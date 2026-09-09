@@ -20,7 +20,6 @@ class Logging(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # --- MESSAGE DELETE LOG ---
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -40,7 +39,6 @@ class Logging(commands.Cog):
             author=message.author
         )
 
-    # --- MESSAGE EDIT LOG ---
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if before.author.bot or not before.guild:
@@ -69,7 +67,6 @@ class Logging(commands.Cog):
             author=before.author
         )
 
-    # --- MEMBER BAN / UNBAN LOGS ---
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         await send_log(
@@ -88,7 +85,6 @@ class Logging(commands.Cog):
             color=config.COLOR_SUCCESS
         )
 
-    # --- MEMBER ROLE UPDATE LOGS ---
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         # Role changes log
