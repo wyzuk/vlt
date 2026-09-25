@@ -20,7 +20,8 @@ import datetime
 import time
 
 import config
-from utils.embeds import success_embed, error_embed, info_embed, create_embed
+from utils.embeds import success_embed, error_embed, info_embed, warning_embed, create_embed
+from utils.components_v2 import send_v2
 from utils.time_parser import parse_duration, format_duration
 from utils.logger import send_log, logger
 from database.db_manager import db
@@ -49,7 +50,7 @@ class Moderation(commands.Cog):
             if isinstance(member, discord.Member):
                 try:
                     dm_embed = error_embed("Banned", f"You were banned from **{ctx.guild.name}**.\n**Reason:** {reason}")
-                    await member.send(embed=dm_embed)
+                    await send_v2(member, embed=dm_embed)
                 except Exception:
                     pass
 
@@ -63,6 +64,25 @@ class Moderation(commands.Cog):
             )
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Could not ban member: {e}"))
+
+    @commands.command(name="unban")
+    @commands.has_permissions(ban_members=True)
+    async def unban(self, ctx: commands.Context, user_id: int, *, reason: Optional[str] = None):
+        """Unban a user by their Discord ID."""
+        reason = reason or "No reason provided."
+        try:
+            user = await self.bot.fetch_user(user_id)
+            await ctx.guild.unban(user, reason=f"Unbanned by {ctx.author}: {reason}")
+            await ctx.send(embed=success_embed("User Unbanned", f"Unbanned **{user}** (`{user.id}`).\n**Reason:** {reason}"))
+            await send_log(
+                self.bot, "User Unbanned",
+                f"**Target:** {user} (`{user.id}`)\n**Moderator:** {ctx.author.mention}\n**Reason:** {reason}",
+                color=config.COLOR_SUCCESS, author=ctx.author
+            )
+        except discord.NotFound:
+            await ctx.send(embed=error_embed("Not Found", f"No banned user was found for ID `{user_id}`."))
+        except Exception as e:
+            await ctx.send(embed=error_embed("Error", f"Could not unban user: {e}"))
 
     @commands.command(name="kick")
     @commands.has_permissions(kick_members=True)
@@ -81,7 +101,7 @@ class Moderation(commands.Cog):
         try:
             try:
                 dm_embed = warning_embed("Kicked", f"You were kicked from **{ctx.guild.name}**.\n**Reason:** {reason}")
-                await member.send(embed=dm_embed)
+                await send_v2(member, embed=dm_embed)
             except Exception:
                 pass
 
@@ -214,7 +234,7 @@ class Moderation(commands.Cog):
 
         try:
             dm_embed = warning_embed("Warning Received", f"You were warned in **{ctx.guild.name}**.\n**Reason:** {reason}\n**Total Warnings:** {len(user_warns)}")
-            await member.send(embed=dm_embed)
+            await send_v2(member, embed=dm_embed)
         except Exception:
             pass
 

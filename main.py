@@ -7,12 +7,20 @@ and modern dark-themed embeds.
 """
 
 import discord
+
+if discord.version_info[:3] < (2, 6, 0):
+    raise RuntimeError(
+        f"Components V2 requires discord.py 2.6.0 or newer; found {discord.__version__}. "
+        "Install the project requirements and restart the bot."
+    )
+
 from discord.ext import commands
 import os
 import sys
 import config
 
 from utils.embeds import error_embed
+from utils.context import ComponentsV2Context
 from utils.logger import send_log, logger
 from database.db_manager import db
 from utils.ui_components import GiveawayView
@@ -31,8 +39,13 @@ class ShopBot(commands.Bot):
             command_prefix=commands.when_mentioned_or(config.PREFIX),
             intents=intents,
             help_command=None,
-            case_insensitive=True
+            case_insensitive=True,
         )
+        self.configured_presence = None
+
+    async def get_context(self, origin, /, *, cls=ComponentsV2Context):
+        """Use the Components V2 sender for every prefix command context."""
+        return await super().get_context(origin, cls=cls)
 
     async def setup_hook(self):
         """Asynchronous setup hook for loading cogs and persistent views."""
@@ -80,15 +93,14 @@ class ShopBot(commands.Bot):
 
         print(banner)
 
-        activity = discord.Activity(
-            type=discord.ActivityType.watching,
-            name=f"{config.PREFIX}help | Shop Management"
+        status, activity = self.configured_presence or (
+            discord.Status.online,
+            discord.Activity(
+                type=discord.ActivityType.watching,
+                name=f"{config.PREFIX}help | Shop Management"
+            ),
         )
-
-        await self.change_presence(
-            status=discord.Status.online,
-            activity=activity
-        )
+        await self.change_presence(status=status, activity=activity)
 
         await send_log(
             self,

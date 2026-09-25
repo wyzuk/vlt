@@ -7,6 +7,7 @@ import logging
 from typing import Optional
 import config
 from utils.embeds import create_embed
+from utils.components_v2 import send_v2
 
 # Setup standard python logger
 logger = logging.getLogger("ShopBot")
@@ -51,6 +52,6 @@ async def send_log(
             for name, val in fields.items():
                 embed.add_field(name=name, value=str(val), inline=True)
 
-        await channel.send(embed=embed)
+        await send_v2(channel, embed=embed)
     except Exception as e:
         logger.error(f"Failed to send log entry: {e}")

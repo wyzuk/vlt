@@ -13,9 +13,11 @@ from typing import Optional
 import time
 import datetime
 import platform
+import re
 
 import config
 from utils.embeds import create_embed, success_embed, error_embed, info_embed
+from utils.components_v2 import send_v2
 
 
 class Utility(commands.Cog):
@@ -26,7 +28,7 @@ class Utility(commands.Cog):
     @commands.command(name="announce")
     @commands.has_permissions(manage_messages=True)
     async def announce(self, ctx: commands.Context, channel: discord.TextChannel, *, message: str):
-        """Send an announcement embed to a target channel."""
+        """Send a Components V2 announcement to a target channel."""
         embed = create_embed(
             title=f"{config.EMOJI_PIN} Announcement",
             description=message,
@@ -35,7 +37,7 @@ class Utility(commands.Cog):
             author_icon=ctx.guild.icon.url if ctx.guild.icon else None
         )
         try:
-            await channel.send(embed=embed)
+            await send_v2(channel, embed=embed)
             await ctx.send(embed=success_embed("Announcement Sent", f"Successfully posted announcement in {channel.mention}."))
         except Exception as e:
             await ctx.send(embed=error_embed("Error", f"Failed to send announcement: {e}"))
@@ -49,6 +51,102 @@ class Utility(commands.Cog):
         except Exception:
             pass
         await ctx.send(content=message)
+
+    @commands.command(name="vch")
+    @commands.has_permissions(manage_messages=True)
+    async def vch(self, ctx: commands.Context, *, details: str):
+        """Relay a purchase as `+rep <caller_id> <product> | <price>`."""
+        match = re.fullmatch(r"\s*(.+?)\s*\(([^()]+)\)\s*", details)
+        if not match:
+            await ctx.send(
+                embed=error_embed(
+                    "Invalid Syntax",
+                    f"Use `{config.PREFIX}vch <product name> (<price>)`, for example "
+                    f"`{config.PREFIX}vch Minecraft host (700BDT)`."
+                )
+            )
+            return
+
+        product = match.group(1).strip()
+        price = match.group(2).strip()
+        price = re.sub(r"^(\d+(?:[.,]\d+)?)\s*([A-Za-z]{3,})$", r"\1 \2", price)
+        if not product or not price:
+            await ctx.send(embed=error_embed("Invalid Syntax", "Include both a product name and a price."))
+            return
+
+        # This plain command relay is intentionally readable by the separate +rep bot.
+        await ctx.channel.send(
+            f"+rep {ctx.author.id} {product} | {price}",
+            allowed_mentions=discord.AllowedMentions.none()
+        )
+
+    @commands.command(name="status")
+    @commands.is_owner()
+    async def status(self, ctx: commands.Context, *, activity: str):
+        """Set the bot presence: playing/watching/listening/streaming/competing, or a custom status."""
+        activity_types = {
+            "playing": discord.ActivityType.playing,
+            "watching": discord.ActivityType.watching,
+            "listening": discord.ActivityType.listening,
+            "streaming": discord.ActivityType.streaming,
+            "competing": discord.ActivityType.competing,
+        }
+        parts = activity.strip().split(maxsplit=1)
+        kind = parts[0].casefold()
+
+        if kind in activity_types:
+            if len(parts) < 2 or not parts[1].strip():
+                await ctx.send(embed=error_embed(
+                    "Missing Activity Name",
+                    f"Use `{config.PREFIX}status <activity> <activity name>`."
+                ))
+                return
+            activity_name = parts[1].strip()
+            if kind == "streaming":
+                if not re.match(r"^https?://", activity_name, re.IGNORECASE):
+                    await ctx.send(embed=error_embed(
+                        "Streaming URL Required",
+                        "For streaming status, include a link such as `https://strm.link`."
+                    ))
+                    return
+                selected_activity = discord.Streaming(name=activity_name, url=activity_name)
+            elif kind == "playing":
+                selected_activity = discord.Game(name=activity_name)
+            else:
+                selected_activity = discord.Activity(type=activity_types[kind], name=activity_name)
+            label = f"{kind.title()} — {activity_name}"
+        else:
+            # An unrecognized activity word (for example, `+status hii`) is
+            # treated as the custom status text exactly as requested.
+            activity_name = activity.strip()
+            selected_activity = discord.CustomActivity(name=activity_name)
+            label = f"Custom status — {activity_name}"
+
+        status = discord.Status.online
+        self.bot.configured_presence = (status, selected_activity)
+        await self.bot.change_presence(status=status, activity=selected_activity)
+        await ctx.send(embed=success_embed("Bot Status Updated", f"The bot now shows **{label}**."))
+
+    @commands.command(name="rename")
+    @commands.guild_only()
+    @commands.has_permissions(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
+    async def rename(self, ctx: commands.Context, *, channel_new_name: str):
+        """Rename the channel where this command is used."""
+        new_name = channel_new_name.strip()
+        if not new_name or len(new_name) > 100:
+            await ctx.send(embed=error_embed("Invalid Channel Name", "Channel names must contain between 1 and 100 characters."))
+            return
+
+        try:
+            await ctx.channel.edit(name=new_name, reason=f"Channel renamed by {ctx.author}")
+        except discord.Forbidden:
+            await ctx.send(embed=error_embed("Permission Denied", "I cannot rename this channel."))
+        except discord.HTTPException as exc:
+            await ctx.send(embed=error_embed("Rename Failed", f"Discord could not rename this channel: {exc}"))
+            return
+        else:
+            await ctx.send(embed=success_embed("Channel Renamed", f"This channel is now named **{new_name}**."))
 
     @commands.command(name="embed")
     @commands.has_permissions(manage_messages=True)
@@ -86,7 +184,7 @@ class Utility(commands.Cog):
         except Exception:
             pass
 
-        await ctx.send(embed=embed)
+        await send_v2(ctx, embed=embed)
 
     @commands.command(name="userinfo")
     async def userinfo(self, ctx: commands.Context, member: Optional[discord.Member] = None):
@@ -212,7 +310,7 @@ class Utility(commands.Cog):
     async def ping(self, ctx: commands.Context):
         """Check bot latency."""
         latency = round(self.bot.latency * 1000)
-        embed = info_embed("Pong! 🏓", f"Bot WebSocket Latency: **{latency}ms**")
+        embed = info_embed(f"Pong! {config.EMOJI_INFORMATION}", f"Bot WebSocket Latency: **{latency}ms**")
         await ctx.send(embed=embed)
 
     @commands.command(name="uptime")
@@ -224,7 +322,7 @@ class Utility(commands.Cog):
         days, hours = divmod(hours, 24)
 
         uptime_str = f"**{days}** days, **{hours}** hours, **{minutes}** minutes, **{seconds}** seconds"
-        embed = info_embed("Bot Uptime ⏳", f"Online for: {uptime_str}")
+        embed = info_embed(f"Bot Uptime {config.EMOJI_TIMEOUT}", f"Online for: {uptime_str}")
         await ctx.send(embed=embed)
 
     @commands.command(name="invite")

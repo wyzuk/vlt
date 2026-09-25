@@ -1,138 +1,67 @@
-# Modern Discord Shop Management Bot (discord.py 2.x & Components V2)
+# Discord Shop Management Bot
 
-A production-ready, modular, high-performance Discord Shop Management Bot built with **Python 3.13+**, **discord.py 2.x**, **Components V2**, and an **SQLite** database layer.
+A modular Discord bot built with Python and `discord.py`. Prefix command replies, help, giveaways, audit logs, and interactive panels use Discord Components V2. The `+v2test` command demonstrates the V2 layout, images, button, and select menu.
 
----
+## Commands
 
-## 🌟 Key Features
+### Moderation
 
-### 🛡️ Channel Protection System
-* Automatically intercepts and reposts messages in configured protected categories and channels.
-* **Protected Category ID:** `1372922294405431436`
-* **Protected Channel ID:** `1372922819838611567`
-* Immediately deletes original user messages and reposts them under the bot's identity while preserving:
-  * Text content
-  * Embeds
-  * Attachments / Files
-  * Stickers
-  * Top author header: `> **Sent by @User**`
+- `+ban <@user> [reason]` — Ban a member.
+- `+unban <user_id> [reason]` — Unban a user by ID.
+- `+kick <@user> [reason]` — Kick a member.
+- `+timeout <@user> <duration> [reason]` — Timeout a member (`30s`, `5m`, `2h`, `1d`).
+- `+untimeout <@user> [reason]` — Remove a timeout.
+- `+mute <@user> [reason]` / `+unmute <@user> [reason]` — Mute or unmute a member.
+- `+warn <@user> <reason>` / `+warnings <@user>` — Manage stored warnings.
+- `+clear <amount>` — Delete messages; alias: `+purge`.
+- `+lock [#channel] [reason]` / `+unlock [#channel] [reason]` — Lock or unlock a channel.
+- `+slowmode <seconds>` — Set slowmode (`0` disables it).
+- `+nick <@user> [new_nickname]` — Change or reset a nickname.
+- `+role <@user> <role>` / `+removerole <@user> <role>` — Manage a member's roles.
+- `+hide [#channel]` / `+unhide [#channel]` — Hide or show a channel to everyone.
+- `+rename <channel new name>` — Rename the channel where the command is used. Requires Manage Channels.
 
----
+### Utility and shop
 
-### 🔨 Complete Moderation Suite
-All moderation commands feature permission checks, dark blurple embeds, and audit logging:
-* `+ban @user [reason]` - Permanently ban a member.
-* `+kick @user [reason]` - Kick a member from the server.
-* `+timeout @user <time> [reason]` - Timeout a user (`30s`, `5m`, `2h`, `1d`).
-* `+untimeout @user [reason]` - Remove timeout from a user.
-* `+mute @user [reason]` - Mute a user (timeout & Muted role).
-* `+unmute @user [reason]` - Unmute a user.
-* `+warn @user <reason>` - Issue an official warning stored in SQLite.
-* `+warnings @user` - View warning history for a user.
-* `+clear <amount>` / `+purge <amount>` - Bulk delete messages.
-* `+lock [channel] [reason]` - Restrict `@everyone` from sending messages.
-* `+unlock [channel] [reason]` - Restore message permissions.
-* `+slowmode <seconds>` - Configure channel slowmode.
-* `+nick @user [new_nick]` - Update or reset member nickname.
-* `+role @user <role>` - Grant a role to a member.
-* `+removerole @user <role>` - Remove a role from a member.
-* `+hide [channel]` - Hide channel from `@everyone`.
-* `+unhide [channel]` - Restore channel visibility.
+- `+announce <#channel> <message>` — Post an announcement.
+- `+say <message>` — Send a message as the bot.
+- `+embed <title> | <description> | [hex]` — Create a formatted Components V2 message.
+- `+vch <product name> (<price>)` — Staff command (Manage Messages permission). Sends a purchase as `+rep <caller_id> <product name> | <price>` in the current channel. Example: `+vch bought minecraft server host for 1 month mumbai region (700BDT)` sends `+rep <your_id> bought minecraft server host for 1 month mumbai region | 700 BDT`.
+- `+status <activity> <activity name>` — Owner-only bot presence control. Supports `playing`, `watching`, `listening`, `streaming`, and `competing`; an unrecognized activity becomes custom status text (`+status hii`). For streaming, pass a URL, such as `+status streaming https://strm.link`.
 
----
+### Information
 
-### 🎉 Advanced Giveaway System (Components V2)
-* **Creation Command:** `+gwy <time> <winner_count> <prize> `
-  * Example: `+gwy 2h 1 Discord_Nitro` 
-* Automatically pings `@everyone` and `@here`.
-* Interactive **Components V2 Buttons**:
-  * `🎉 Join Giveaway` (Toggles entry & updates count live)
-  * `📊 Entries` (Displays total entries ephemerally)
-  * `⏳ Time Left` (Displays dynamic countdown timestamp)
-* Users can also enter simply by reacting with 🎉!
-* **Forced Winner Logic:** If `forced_user_id` is supplied, that user wins automatically upon conclusion.
-* **Giveaway Management Commands:**
-  * `+reroll <message_id>` - Reroll new winner(s).
-  * `+gend <message_id>` - Force end giveaway immediately.
-  * `+gcancel <message_id>` - Cancel giveaway.
-  * `+glist` - View active giveaways.
+- `+userinfo [@user]`, `+serverinfo`, `+avatar [@user]`
+- `+channelinfo [#channel]`, `+roleinfo <role>`
+- `+botinfo`, `+ping`, `+uptime`, `+invite`
+- `+v2test` — Send a V2 layout with a working button and select menu.
+- `+dashboard` — Open the interactive bot status dashboard.
+- `+help` — Show all commands in larger text, 10 per page, with previous/next buttons. `+hide` and `+unhide` are omitted from help.
 
----
+### Giveaway management
 
-### ⚙️ Utility & Information System
-* `+announce #channel <message>` - Send styled announcement embed.
-* `+say <message>` - Bot repeats message.
-* `+embed Title | Description | [Color Hex]` - Custom embed creation.
-* `+userinfo [@user]` - Detailed account and join dates.
-* `+serverinfo` - Guild stats and member counts.
-* `+avatar [@user]` - User avatar viewer.
-* `+channelinfo [#channel]` - Channel metadata.
-* `+roleinfo <role>` - Role details.
-* `+botinfo` - System specs, latency, and uptime.
-* `+ping` - WebSocket latency check.
-* `+uptime` - Bot runtime uptime counter.
-* `+invite` - Bot invite link generator.
-* `+help` - Dynamic Components V2 category help menu.
+Requires Manage Server permission.
 
----
+- `+gwy <time> <winners> <prize> [forced_user]`
+- `+reroll <message_id>`, `+gend <message_id>`, `+gcancel <message_id>`, `+glist`
+- `+ghlp` — Show giveaway commands.
 
-### 🎨 Dark Theme & Embed Styling
-* Dark Charcoal Background (`#2B2D31`)
-* Accent Color: Blurple (`#5865F2`)
-* Standardized timestamps, footers, and bot avatars on all embeds.
+## Components V2 and emoji setup
 
----
+Components V2 support in `discord.py` requires version 2.6 or newer. The dependency is specified in `requirements.txt`. The bot uses the custom emoji IDs configured in `config.py`; the bot must be able to use those server emojis.
 
-## 📁 Project Architecture
+## Configuration and launch
 
-```
-vlt/
-├── config.py                 # Configuration (Token, IDs, Colors, Emojis)
-├── main.py                   # Bot entry point, setup_hook, error handler
-├── requirements.txt          # Dependencies
-├── README.md                 # Documentation
-├── database/
-│   ├── __init__.py
-│   └── db_manager.py         # SQLite persistence (giveaways, warnings, shop schemas)
-├── utils/
-│   ├── __init__.py
-│   ├── embeds.py             # Unified dark blurple embed generator
-│   ├── time_parser.py        # Time duration string parser (30s, 5m, 2h, 1d)
-│   ├── ui_components.py      # Components V2 Views, Buttons, Dropdowns, Paginator
-│   └── logger.py             # Audit log transmitter
-└── cogs/
-    ├── __init__.py
-    ├── channel_protection.py # Auto reposting protection cog
-    ├── moderation.py         # Complete moderation suite
-    ├── utility.py            # Utility and information commands
-    ├── giveaway.py           # Giveaway system & manager
-    ├── logging.py            # Event logger
-    └── help.py               # Interactive Components V2 help cog
+Set `TOKEN` in the environment, install dependencies from `requirements.txt`, then start the bot. In PowerShell, for example:
+
+```powershell
+$env:TOKEN = "YOUR_BOT_TOKEN"
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
 ```
 
----
+The token is read from the environment variable and is not stored in the source files. Keep it private.
 
-## 🚀 Future Ready Expansion Architecture
-The database schema (`database/db_manager.py`) and modular cog layout are structured for immediate expansion into:
-* 🛒 **Shop & Product Management**
-* 📦 **Auto Delivery System**
-* 🔑 **License Key Distribution**
-* 📊 **Stock Management**
-* 💳 **Crypto & Fiat Payments**
-* 🎟️ **Support Ticket System**
-* 💰 **Economy & Coupons**
-* 🌐 **Web Dashboard Integration**
+After changing requirements in a cloud host, redeploy or restart its service so it installs the updated `discord.py` version. Use `+v2test` in Discord to check the live V2 message and its interactions.
 
----
-
-## 🛠️ How to Run
-
-1. Clone or navigate to the repository directory.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the bot:
-   ```bash
-   python main.py
-   ```
+The bot requires the Message Content and Server Members intents enabled in the Discord Developer Portal. Moderation, announcement, giveaway, and logging features also need their corresponding server permissions.

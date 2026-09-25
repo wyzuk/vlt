@@ -23,6 +23,7 @@ import config
 from utils.embeds import create_embed, success_embed, error_embed, info_embed
 from utils.time_parser import parse_duration, format_duration
 from utils.ui_components import GiveawayView
+from utils.components_v2 import send_v2, edit_v2
 from utils.logger import send_log, logger
 from database.db_manager import db
 
@@ -50,7 +51,7 @@ class Giveaway(commands.Cog):
             logger.error(f"Error in giveaway background task loop: {e}")
 
     async def _finish_giveaway(self, gwy: dict):
-        """Finalize a giveaway, pick winners, update embed, and notify channel."""
+        """Finalize a giveaway, pick winners, update its V2 layout, and notify channel."""
         message_id = gwy['message_id']
         channel_id = gwy['channel_id']
         guild_id = gwy['guild_id']
@@ -75,7 +76,7 @@ class Giveaway(commands.Cog):
             logger.warning(f"Could not fetch message for giveaway {message_id}")
             return
 
-        # Synchronize reactions if any users reacted with 🎉 directly
+        # Synchronize entries from the configured giveaway reaction.
         try:
             for reaction in msg.reactions:
                 if str(reaction.emoji) == config.EMOJI_GIVEAWAY:
@@ -109,28 +110,25 @@ class Giveaway(commands.Cog):
                 if member:
                     winners.append(member)
 
-        # Update Embed
-        embed = msg.embeds[0] if msg.embeds else create_embed(title=f"Giveaway Ended: {prize}")
-        embed.color = config.COLOR_DARK
-        embed.set_field_at(4, name="Status", value="**ENDED**", inline=True)
-
         if winners:
             winner_mentions = ", ".join([w.mention for w in winners])
-            embed.description = f"**Winner(s):** {winner_mentions}\n**Prize:** `{prize}`"
-
-            # Disable buttons
-            view = GiveawayView(message_id, gwy['end_time'])
-            for child in view.children:
-                child.disabled = True
-
-            await msg.edit(embed=embed, view=view)
-
-            win_embed = create_embed(
-                title=f"{config.EMOJI_GIVEAWAY} Giveaway Winner(s) Announced!",
-                description=f"Congratulations {winner_mentions}! You won **{prize}**!\n[Jump to Giveaway]({msg.jump_url})",
-                color=config.COLOR_SUCCESS
+            giveaway_content = (
+                f"## {config.EMOJI_BOT} Giveaway Ended: {prize}\n"
+                f"**Winner(s):** {winner_mentions}\n"
+                f"**Prize:** {prize}\n"
+                f"**Entries:** {len(entries)}\n"
+                f"**Status:** Ended"
             )
-            await channel.send(content=winner_mentions, embed=win_embed)
+            view = GiveawayView(message_id, gwy['end_time'], giveaway_content, len(entries))
+            view.disable_buttons()
+            await edit_v2(msg, view=view)
+
+            await send_v2(
+                channel,
+                f"## {config.EMOJI_BOT} Giveaway Winner(s)\n"
+                f"Congratulations {winner_mentions}! You won **{prize}**.\n"
+                f"[Jump to Giveaway]({msg.jump_url})"
+            )
 
             await send_log(
                 self.bot, "Giveaway Ended",
@@ -138,17 +136,21 @@ class Giveaway(commands.Cog):
                 color=config.COLOR_SUCCESS
             )
         else:
-            embed.description = f"**Giveaway Cancelled**\nNo valid entries participated in this giveaway."
-            view = GiveawayView(message_id, gwy['end_time'])
-            for child in view.children:
-                child.disabled = True
-
-            await msg.edit(embed=embed, view=view)
-            cancel_embed = error_embed(
-                "Giveaway Cancelled",
-                f"The giveaway for **{prize}** was cancelled due to lack of participants.\n[Jump to Giveaway]({msg.jump_url})"
+            giveaway_content = (
+                f"## {config.EMOJI_WARNING} Giveaway Cancelled: {prize}\n"
+                "No valid entries participated in this giveaway.\n"
+                f"**Entries:** {len(entries)}\n"
+                "**Status:** Cancelled"
             )
-            await channel.send(embed=cancel_embed)
+            view = GiveawayView(message_id, gwy['end_time'], giveaway_content, len(entries))
+            view.disable_buttons()
+            await edit_v2(msg, view=view)
+            await send_v2(
+                channel,
+                f"## {config.EMOJI_WARNING} Giveaway Cancelled\n"
+                f"The giveaway for **{prize}** was cancelled because nobody entered.\n"
+                f"[Jump to Giveaway]({msg.jump_url})"
+            )
 
     @commands.command(name="gwy")
     @commands.has_permissions(manage_guild=True)
@@ -173,41 +175,42 @@ class Giveaway(commands.Cog):
 
         seconds = parse_duration(time_str)
         if not seconds or seconds < 10:
-            err_msg = await ctx.send(embed=error_embed("Invalid Duration", "Please specify a duration of at least 10 seconds (e.g. 5m, 2h, 1d)."))
+            err_msg = await send_v2(ctx, embed=error_embed("Invalid Duration", "Please specify a duration of at least 10 seconds (e.g. 5m, 2h, 1d)."))
             await err_msg.delete(delay=5)
             return
 
         if winner_count <= 0 or winner_count > 50:
-            err_msg = await ctx.send(embed=error_embed("Invalid Winner Count", "Winner count must be between 1 and 50."))
+            err_msg = await send_v2(ctx, embed=error_embed("Invalid Winner Count", "Winner count must be between 1 and 50."))
             await err_msg.delete(delay=5)
             return
 
         end_timestamp = time.time() + seconds
 
-        embed = create_embed(
-            title=f"{config.EMOJI_GIVEAWAY} GIVEAWAY: {prize}",
-            description=f"React with {config.EMOJI_GIVEAWAY} or click **Join Giveaway** below to enter!",
-            color=config.COLOR_PRIMARY
+        giveaway_content = (
+            f"## {config.EMOJI_BOT} Giveaway: {prize}\n"
+            f"Click **Join** below or react with {config.EMOJI_GIVEAWAY} to enter.\n\n"
+            f"**Prize:** {prize}\n"
+            f"**Hosted by:** {ctx.author.mention}\n"
+            f"**Ends:** <t:{int(end_timestamp)}:R> (<t:{int(end_timestamp)}:F>)\n"
+            f"**Winners:** {winner_count}\n"
+            "**Entries:** 0\n"
+            "**Status:** Active"
         )
 
-        embed.add_field(name="Prize", value=f"**{prize}**", inline=True)
-        embed.add_field(name="Hosted By", value=ctx.author.mention, inline=True)
-        embed.add_field(name="Ends", value=f"<t:{int(end_timestamp)}:R> (<t:{int(end_timestamp)}:F>)", inline=False)
-        embed.add_field(name="Winner Count", value=f"**{winner_count}**", inline=True)
-        embed.add_field(name="Entries", value="**0** participants", inline=True)
-        embed.add_field(name="Status", value="**ACTIVE**", inline=True)
-
-        # Ping @everyone AND @here
-        announce_content = "@everyone @here"
+        # Mention parsing remains explicit for giveaway announcements.
+        announce_content = "@everyone @here\n\n" + giveaway_content
 
         try:
-            msg = await ctx.send(content=announce_content, embed=embed)
+            msg = await send_v2(
+                ctx,
+                content=announce_content,
+                allowed_mentions=discord.AllowedMentions(everyone=True)
+            )
 
-            # Attach Components V2 Buttons
-            view = GiveawayView(msg.id, end_timestamp)
-            await msg.edit(view=view)
+            view = GiveawayView(msg.id, end_timestamp, giveaway_content)
+            await edit_v2(msg, view=view)
 
-            # Automatically react with 🎉
+            # Automatically react with the configured custom icon.
             await msg.add_reaction(config.EMOJI_GIVEAWAY)
 
             # Save giveaway to database
@@ -229,7 +232,7 @@ class Giveaway(commands.Cog):
                 color=config.COLOR_PRIMARY, author=ctx.author
             )
         except Exception as e:
-            err_msg = await ctx.send(embed=error_embed("Error", f"Failed to create giveaway: {e}"))
+            err_msg = await send_v2(ctx, embed=error_embed("Error", f"Failed to create giveaway: {e}"))
             await err_msg.delete(delay=5)
 
     @commands.Cog.listener()
@@ -266,13 +269,13 @@ class Giveaway(commands.Cog):
 
         gwy = db.get_giveaway(message_id)
         if not gwy:
-            err_msg = await ctx.send(embed=error_embed("Not Found", f"Giveaway message ID `{message_id}` not found."))
+            err_msg = await send_v2(ctx, embed=error_embed("Not Found", f"Giveaway message ID `{message_id}` not found."))
             await err_msg.delete(delay=5)
             return
 
         entries = gwy['entries']
         if not entries:
-            err_msg = await ctx.send(embed=error_embed("No Entries", "Cannot reroll giveaway because no users participated."))
+            err_msg = await send_v2(ctx, embed=error_embed("No Entries", "Cannot reroll giveaway because no users participated."))
             await err_msg.delete(delay=5)
             return
 
@@ -280,10 +283,10 @@ class Giveaway(commands.Cog):
         winner = ctx.guild.get_member(winner_id) or await self.bot.fetch_user(winner_id)
 
         reroll_embed = success_embed(
-            "New Winner Selected! 🎉",
+            f"New Winner Selected! {config.EMOJI_BOT}",
             f"The new winner for **{gwy['prize']}** is {winner.mention}!"
         )
-        await ctx.send(content=winner.mention, embed=reroll_embed)
+        await send_v2(ctx, content=winner.mention, embed=reroll_embed)
 
     @commands.command(name="gend")
     @commands.has_permissions(manage_guild=True)
@@ -296,12 +299,12 @@ class Giveaway(commands.Cog):
 
         gwy = db.get_giveaway(message_id)
         if not gwy:
-            err_msg = await ctx.send(embed=error_embed("Not Found", f"Giveaway with ID `{message_id}` not found."))
+            err_msg = await send_v2(ctx, embed=error_embed("Not Found", f"Giveaway with ID `{message_id}` not found."))
             await err_msg.delete(delay=5)
             return
 
         if gwy['ended'] == 1:
-            err_msg = await ctx.send(embed=info_embed("Already Ended", "This giveaway has already ended."))
+            err_msg = await send_v2(ctx, embed=info_embed("Already Ended", "This giveaway has already ended."))
             await err_msg.delete(delay=5)
             return
 
@@ -318,7 +321,7 @@ class Giveaway(commands.Cog):
 
         gwy = db.get_giveaway(message_id)
         if not gwy:
-            err_msg = await ctx.send(embed=error_embed("Not Found", f"Giveaway with ID `{message_id}` not found."))
+            err_msg = await send_v2(ctx, embed=error_embed("Not Found", f"Giveaway with ID `{message_id}` not found."))
             await err_msg.delete(delay=5)
             return
 
@@ -328,10 +331,10 @@ class Giveaway(commands.Cog):
             channel = ctx.guild.get_channel(gwy['channel_id'])
             if channel:
                 msg = await channel.fetch_message(message_id)
-                embed = msg.embeds[0]
-                embed.description = "**GIVEAWAY CANCELLED**"
-                embed.color = config.COLOR_DANGER
-                await msg.edit(embed=embed, view=None)
+                await edit_v2(
+                    msg,
+                    content=f"## {config.EMOJI_WARNING} Giveaway Cancelled: {gwy['prize']}\n**Status:** Cancelled"
+                )
         except Exception:
             pass
 
@@ -348,7 +351,7 @@ class Giveaway(commands.Cog):
         server_active = [g for g in active if g['guild_id'] == ctx.guild.id]
 
         if not server_active:
-            err_msg = await ctx.send(embed=info_embed("Active Giveaways", "There are currently no active giveaways."))
+            err_msg = await send_v2(ctx, embed=info_embed("Active Giveaways", "There are currently no active giveaways."))
             await err_msg.delete(delay=5)
             return
 
@@ -365,7 +368,7 @@ class Giveaway(commands.Cog):
                 inline=False
             )
 
-        msg = await ctx.send(embed=embed)
+        msg = await send_v2(ctx, embed=embed)
         await msg.delete(delay=15)
 
 

@@ -1,164 +1,166 @@
-"""
-Help System Cog using Components V2 Interactive UI.
-
-Public categories:
-- Moderation
-- Utility
-- Management
-- Information
-
-Private Owner/Admin Category:
-- Giveaway Help (+ghlp)
-"""
+"""Paged Components V2 help for the bot's prefix commands."""
 
 import discord
 from discord.ext import commands
+
 import config
-from utils.embeds import create_embed, error_embed
-from utils.ui_components import HelpNavView
+from utils.components_v2 import V2LayoutView, edit_interaction_v2, send_v2
 
 
-PUBLIC_HELP_DATA = {
-    "Moderation": {
-        "emoji": config.EMOJI_MOD,
-        "description": "Server moderation and disciplinary action commands.",
-        "commands": {
-            "ban @user [reason]": "Ban a member from the server.",
-            "kick @user [reason]": "Kick a member from the server.",
-            "timeout @user <time> [reason]": "Timeout a member (e.g., 30s, 5m, 2h, 1d).",
-            "untimeout @user [reason]": "Remove timeout from a member.",
-            "mute @user [reason]": "Mute a member (timeout / muted role).",
-            "unmute @user [reason]": "Unmute a member.",
-            "warn @user <reason>": "Issue an official warning to a member.",
-            "warnings @user": "View warning history for a member.",
-            "clear <amount>": "Purge X messages from the current channel (alias: +purge)."
-        }
-    },
-    "Management": {
-        "emoji": config.EMOJI_SHIELD,
-        "description": "Channel & role management commands.",
-        "commands": {
-            "lock [channel] [reason]": "Prevent @everyone from sending messages.",
-            "unlock [channel] [reason]": "Restore message sending permissions.",
-            "slowmode <seconds>": "Set message slowmode delay for the channel.",
-            "nick @user [new_nick]": "Change or reset a member's nickname.",
-            "role @user <role>": "Assign a role to a member.",
-            "removerole @user <role>": "Remove a role from a member.",
-            "hide [channel]": "Hide a channel from @everyone.",
-            "unhide [channel]": "Restore channel visibility for @everyone."
-        }
-    },
-    "Utility": {
-        "emoji": "⚙️",
-        "description": "Broadcasting and custom message commands.",
-        "commands": {
-            "announce #channel <msg>": "Post a structured announcement embed.",
-            "say <message>": "Make the bot repeat your message.",
-            "embed Title | Text | [Hex]": "Send a formatted custom embed."
-        }
-    },
-    "Information": {
-        "emoji": "ℹ️",
-        "description": "Server, user, bot, and latency status commands.",
-        "commands": {
-            "userinfo [@user]": "View detailed account & join dates for a user.",
-            "serverinfo": "View server stats, member count, and creation date.",
-            "avatar [@user]": "View a user's full resolution avatar.",
-            "channelinfo [#channel]": "View metadata for a channel.",
-            "roleinfo <role>": "View details about a role.",
-            "botinfo": "View bot specifications, uptime, and system info.",
-            "ping": "Check bot WebSocket latency.",
-            "uptime": "Check how long the bot has been online.",
-            "invite": "Get the bot's invite link."
-        }
-    }
-}
+COMMANDS = [
+    (config.EMOJI_BAN, "ban <@user> [reason]", "Ban a member."),
+    (config.EMOJI_UNBAN, "unban <user_id> [reason]", "Unban a user by ID."),
+    (config.EMOJI_KICK, "kick <@user> [reason]", "Kick a member."),
+    (config.EMOJI_TIMEOUT, "timeout <@user> <duration> [reason]", "Timeout for `30s`, `5m`, `2h`, or `1d`."),
+    (config.EMOJI_UNTIMEOUT, "untimeout <@user> [reason]", "Remove a member's timeout."),
+    (config.EMOJI_MUTE, "mute <@user> [reason]", "Mute a member."),
+    (config.EMOJI_MUTE, "unmute <@user> [reason]", "Unmute a member."),
+    (config.EMOJI_WARNING, "warn <@user> <reason>", "Issue a warning."),
+    (config.EMOJI_WARNING, "warnings <@user>", "Show warning history."),
+    (config.EMOJI_MODERATION, "clear <amount>", "Delete up to 1,000 messages. Alias: `+purge`."),
+    (config.EMOJI_LOCK, "lock [#channel] [reason]", "Lock a channel."),
+    (config.EMOJI_UNLOCK, "unlock [#channel] [reason]", "Unlock a channel."),
+    (config.EMOJI_MODERATION, "slowmode <seconds>", "Set channel slowmode; use `0` to disable."),
+    (config.EMOJI_NICKNAME, "nick <@user> [new_nickname]", "Change or reset a nickname."),
+    (config.EMOJI_ROLES, "role <@user> <role>", "Give a member a role."),
+    (config.EMOJI_ROLES, "removerole <@user> <role>", "Remove a member's role."),
+    (config.EMOJI_ANNOUNCEMENT, "announce <#channel> <message>", "Post an announcement in Components V2."),
+    (config.EMOJI_SAY, "say <message>", "Send a Components V2 message as the bot."),
+    (config.EMOJI_EMBED, "embed <title> | <description> | [hex]", "Create a custom Components V2 message."),
+    (config.EMOJI_DEVELOPER, "vch <product name> (<price>)", "Send `+rep <your ID> <product> | <price>`. Example: `+vch Minecraft host (700BDT)`."),
+    (config.EMOJI_UTILITY, "rename <channel new name>", "Rename the channel where you use this command."),
+    (config.EMOJI_BOT, "status <activity> <activity name>", "Set a bot activity; `+status hii` sets a custom status. Owner only."),
+    (config.EMOJI_INFORMATION, "userinfo [@user]", "Show account, server, and role information."),
+    (config.EMOJI_INFORMATION, "serverinfo", "Show server details and counts."),
+    (config.EMOJI_INFORMATION, "avatar [@user]", "Show a user's avatar."),
+    (config.EMOJI_INFORMATION, "channelinfo [#channel]", "Show channel details."),
+    (config.EMOJI_ROLES, "roleinfo <role>", "Show role details."),
+    (config.EMOJI_BOT, "botinfo", "Show bot version, uptime, and statistics."),
+    (config.EMOJI_INFORMATION, "ping", "Show bot latency."),
+    (config.EMOJI_BOT, "uptime", "Show how long the bot has been online."),
+    (config.EMOJI_BOT, "invite", "Get the bot invite link."),
+    (config.EMOJI_INFORMATION, "v2test", "Check the Components V2 layout, button, and select."),
+    (config.EMOJI_BOT, "dashboard", "Open the interactive bot status dashboard."),
+    (config.EMOJI_BOT, "gwy <time> <winners> <prize> [forced_user]", "Create a giveaway. Manage Server permission required."),
+    (config.EMOJI_BOT, "reroll <message_id>", "Choose a new giveaway winner."),
+    (config.EMOJI_BOT, "gend <message_id>", "End an active giveaway."),
+    (config.EMOJI_BOT, "gcancel <message_id>", "Cancel an active giveaway."),
+    (config.EMOJI_BOT, "glist", "List active giveaways."),
+    (config.EMOJI_DEVELOPER, "ghlp", "Show giveaway commands; Manage Server permission required."),
+    (config.EMOJI_BOT, "help", "Show every command, 10 per page."),
+]
 
-GIVEAWAY_HELP_DATA = {
-    "gwy <time> <winners> <prize> [forced_id]": "Create a new giveaway with optional forced winner.",
-    "reroll <message_id>": "Pick a new random winner for an ended giveaway.",
-    "gend <message_id>": "Force-end an active giveaway immediately.",
-    "gcancel <message_id>": "Cancel an active giveaway without picking winners.",
-    "glist": "List all currently active server giveaways."
-}
+PAGE_SIZE = 10
+HIDDEN_FROM_HELP = {"hide", "unhide"}
+
+
+def command_entries(bot: commands.Bot):
+    """Include any newly registered commands while keeping private hide controls out."""
+    entries = list(COMMANDS)
+    listed_names = {entry[1].split(maxsplit=1)[0] for entry in entries}
+    for command in sorted(bot.commands, key=lambda item: item.name.casefold()):
+        if command.name in HIDDEN_FROM_HELP or command.name in listed_names:
+            continue
+        entries.append((config.EMOJI_BOT, command.name + (f" {command.signature}" if command.signature else ""), command.short_doc or "Bot command."))
+    return entries
+
+
+def help_page_text(entries, page: int) -> str:
+    page_count = max(1, (len(entries) + PAGE_SIZE - 1) // PAGE_SIZE)
+    start = page * PAGE_SIZE
+    lines = [
+        f"# {config.EMOJI_BOT} Shop Management Bot",
+        f"**Prefix:** `{config.PREFIX}`  ·  **Page {page + 1} of {page_count}**  ·  10 commands per page",
+        "",
+    ]
+    for emoji, syntax, description in entries[start:start + PAGE_SIZE]:
+        lines.extend((f"### {emoji} `{config.PREFIX}{syntax}`", description, ""))
+    return "\n".join(lines).rstrip()
+
+
+def help_text() -> str:
+    """Return the first help page for use inside the V2 demo panel."""
+    return help_page_text(COMMANDS, 0)
+
+
+class HelpPageButton(discord.ui.Button):
+    def __init__(self, direction: int):
+        self.direction = direction
+        if direction < 0:
+            super().__init__(label="◀ Previous", style=discord.ButtonStyle.secondary, custom_id="help:previous")
+        else:
+            super().__init__(label="Next ▶", style=discord.ButtonStyle.primary, custom_id="help:next")
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        view = self.view
+        if not isinstance(view, HelpView):
+            return
+        view.page = max(0, min(view.page + self.direction, view.page_count - 1))
+        view.refresh()
+        await edit_interaction_v2(interaction, view=view)
+
+
+class HelpView(V2LayoutView):
+    def __init__(self, bot: commands.Bot, owner_id: int):
+        self.entries = command_entries(bot)
+        self.page = 0
+        self.owner_id = owner_id
+        self.bound_message = None
+        self.page_count = max(1, (len(self.entries) + PAGE_SIZE - 1) // PAGE_SIZE)
+        super().__init__(help_page_text(self.entries, self.page), accent_color=config.COLOR_PRIMARY, timeout=600)
+
+        row = discord.ui.ActionRow()
+        self.previous_button = HelpPageButton(-1)
+        self.next_button = HelpPageButton(1)
+        row.add_item(self.previous_button)
+        row.add_item(self.next_button)
+        self.add_item(row)
+        self.refresh()
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        # The help pages are public, so anyone can use the page controls.
+        return True
+
+    def refresh(self) -> None:
+        self.set_content(help_page_text(self.entries, self.page))
+        self.previous_button.disabled = self.page == 0
+        self.next_button.disabled = self.page >= self.page_count - 1
+
+    async def on_timeout(self) -> None:
+        self.previous_button.disabled = True
+        self.next_button.disabled = True
+        if self.bound_message:
+            try:
+                await self.bound_message.edit(view=self)
+            except discord.HTTPException:
+                pass
 
 
 class Help(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.bot.remove_command("help")  # Override default help command
 
     @commands.command(name="help")
-    async def help_command(self, ctx: commands.Context, category: str = None):
-        """Public Components V2 Help Menu (Excludes private giveaway commands)."""
-
-        if category:
-            matched_cat = None
-            for cat_name in PUBLIC_HELP_DATA.keys():
-                if cat_name.lower() == category.lower():
-                    matched_cat = cat_name
-                    break
-
-            if matched_cat:
-                data = PUBLIC_HELP_DATA[matched_cat]
-                embed = create_embed(
-                    title=f"{data['emoji']} {matched_cat} Commands",
-                    description=data['description'],
-                    color=config.COLOR_PRIMARY
-                )
-                for cmd, desc in data['commands'].items():
-                    embed.add_field(name=f"`{config.PREFIX}{cmd}`", value=desc, inline=False)
-                await ctx.send(embed=embed)
-                return
-
-        # Public Overview Embed with Interactive Components V2 Navigation
-        embed = create_embed(
-            title=f"{config.EMOJI_BOT} Discord Shop Bot Command Center",
-            description=(
-                f"Welcome to the **Shop Management Bot** command hub!\n"
-                f"Use the buttons or dropdown menu below to explore commands by category.\n\n"
-                f"**Default Prefix:** `{config.PREFIX}`\n"
-                f"**Categories:** Moderation, Utility, Management, Information"
-            ),
-            color=config.COLOR_PRIMARY,
-            thumbnail_url=self.bot.user.display_avatar.url if self.bot.user else None
-        )
-
-        embed.add_field(name="🛡️ Moderation", value=f"`{config.PREFIX}help Moderation`", inline=True)
-        embed.add_field(name="⚙️ Utility", value=f"`{config.PREFIX}help Utility`", inline=True)
-        embed.add_field(name="🔒 Management", value=f"`{config.PREFIX}help Management`", inline=True)
-        embed.add_field(name="ℹ️ Information", value=f"`{config.PREFIX}help Information`", inline=True)
-
-        view = HelpNavView(PUBLIC_HELP_DATA, ctx.author.id)
-        await ctx.send(embed=embed, view=view)
+    async def help_command(self, ctx: commands.Context):
+        """Show every command in larger text, with 10 commands per page."""
+        view = HelpView(self.bot, ctx.author.id)
+        view.bound_message = await send_v2(ctx, view=view)
 
     @commands.command(name="ghlp")
     @commands.has_permissions(manage_guild=True)
-    async def ghlp(self, ctx: commands.Context):
-        """Private Giveaway Help Command (Owners / Admins Only)."""
-        # Automatically delete original command message to maintain privacy
-        try:
-            await ctx.message.delete()
-        except Exception:
-            pass
-
-        embed = create_embed(
-            title=f"{config.EMOJI_GIVEAWAY} Private Giveaway Management Suite",
-            description=(
-                f"Confidential giveaway management panel for administrators.\n"
-                f"Commands executed will post clean embeds without revealing raw command syntax.\n\n"
-                f"**Prefix:** `{config.PREFIX}`"
-            ),
-            color=config.COLOR_PRIMARY,
-            thumbnail_url=self.bot.user.display_avatar.url if self.bot.user else None
+    async def giveaway_help(self, ctx: commands.Context):
+        """Show the admin-only giveaway commands."""
+        text = "## Giveaway Management\n" + "\n".join(
+            f"### {config.EMOJI_BOT} `{config.PREFIX}{syntax}`\n{description}"
+            for syntax, description in [
+                ("gwy <time> <winners> <prize> [forced_user]", "Create a giveaway."),
+                ("reroll <message_id>", "Choose a new winner."),
+                ("gend <message_id>", "End an active giveaway."),
+                ("gcancel <message_id>", "Cancel an active giveaway."),
+                ("glist", "List active giveaways."),
+            ]
         )
-
-        for cmd, desc in GIVEAWAY_HELP_DATA.items():
-            embed.add_field(name=f"`{config.PREFIX}{cmd}`", value=desc, inline=False)
-
-        embed.set_footer(text="Private Admin Menu • Authorized Personnel Only")
-
-        await ctx.send(embed=embed)
+        await send_v2(ctx, text)
 
 
 async def setup(bot: commands.Bot):
